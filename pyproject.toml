@@ -1,0 +1,9 @@
+[project]
+name = "lab-knowledge-base"
+version = "0.1.0"
+description = "Lab knowledge base tooling and examples"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
