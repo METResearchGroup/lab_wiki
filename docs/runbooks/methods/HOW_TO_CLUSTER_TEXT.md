@@ -13,6 +13,18 @@ We cluster text for a few recurring reasons in lab research:
 
 Clustering doesn't just work automatically or in a vacuum. It's dependent on the quality of data passed into it, assumptions about the clustering model, and a human interpretation of what groups the algorithms discover.
 
+## Practical advice
+
+If in a crunch, I suggest using **BERTopic** as the best all-in-one clustering approach. It combines clustering as well as generating human-readable labels for the clusters (so, it's more of a "clustering pipeline" rather than a "clustering algorithm"). However, it's good to know what the alternative approaches are, as:
+
+1. Your task may not actually be a good fit for BERTopic.
+2. It may not be clear how much of an improvement the BERTopic fit is unless you have simpler algorithms as a baseline.
+3. You may want to swap out parts of the BERTopic algorithm for other approaches (e.g., replacing HDBSCAN with hierarchical clustering).
+
+For using AI agents, I suggest asking them to pull the latest docs on BERTopic and proposing a plan. Make sure that you understand the basic steps of BERTopic (outlined below) and that the AI agent's build plan matches it. There are multiple distinct parts of BERTopic, and it's up to you to understand how each one fits together to generate the topics created by BERTopic.
+
+In practice, I highly recommend combining BERTopic with an LLM in order to generate human-readable descriptions of the topics, see [this guide](https://maartengr.github.io/BERTopic/getting_started/representation/llm.html) for more information.
+
 ## Baseline naive clustering approaches
 
 Prior to using any complicated clustering algorithms, it's always good to step back and try the naive versions first. This can take a variety of approaches, such as:
@@ -147,21 +159,65 @@ To see if this generalizes, take text outside of the sample used to build the cl
 
 ## Algorithm 2: BERTopic
 
-BERTopic is ...
+BERTopic is a topic modeling method that treats topic discovery as a pipeline. That pipeline has the following steps:
 
-I highly recommend combining BERTopic with an LLM in order to generate human-readable descriptions of the topics, see [this guide](https://maartengr.github.io/BERTopic/getting_started/representation/llm.html) for more information.
+1. Embed documents: Convert documents to high-dimensional embeddings using transformer models like BERT.
+2. Reduce dimensionality: Apply UMAP to reduce embeddings to 2D or 3D for effective clustering.
+3. Cluster the reduced embeddings: Use HDBSCAN or similar algorithms to group similar documents.
+4. Extract topic representations: Generate topic labels by identifying the most important words in each cluster.
+5. Fine-tune topic assignments (optional): Optionally refine topic assignments or merge similar topics.
+
+In practice, I highly recommend combining BERTopic with an LLM in order to generate human-readable descriptions of the topics, see [this guide](https://maartengr.github.io/BERTopic/getting_started/representation/llm.html) for more information.
+
+Since BERTopic is a pipeline, you can swap different pieces (different embedders, different settings for UMAP, different clustering models, different representation models). The default parameters and setup work well out of the box though.
+
+Another mental model to remember is that BERTopic collapses the task of feature discovery into basically two tasks:
+
+1. Generate groups of similar items (via clustering).
+2. Generate descriptions of each group (via topic representation).
+
+K-Means can be used within BERTopic (especially in lieu of HDBSCAN). In addition, BERTopic, unlike K-Means, often includes a topic specifically for outliers, so outliers are less likely to pollute the generated groups. This is because HDBSCAN, unlike K-Means, is a density algorithm, rather than a distance algorithm, so it surfaces regions of high density rather than trying to fit centroids.
 
 ### What is BERTopic?
 
 #### What are the steps in BERTopic?
 
-...
+At a high level, the default pipeline is:
+
+```text
+Input: documents D = {d_1, ..., d_n}
+Output: topic ID per document (often including -1 for outliers), plus a representation per topic
+
+1. Embed each document into a vector (sentence-transformers, Titan, etc.)
+2. Reduce dimensionality (default: UMAP)
+3. Cluster the reduced embeddings (default: HDBSCAN)
+   - Dense regions become topics
+   - Sparse points can be labeled as outliers (-1)
+4. For each topic (cluster), build a representation of what it is "about"
+   - Default: c-TF-IDF over the documents in that topic -> ranked keywords
+   - Optional: KeyBERT-style keywords, MMR diversification, LLM labels, etc.
+5. Return topic assignments + topic representations
+```
 
 #### What problems with other methods does BERTopic try to solve?
 
-...
+Relative to naive baselines and plain K-Means on embeddings, BERTopic addresses a few common pain points:
+
+- Unknown number of topics: K-Means forces you to pick `k`. BERTopic's default HDBSCAN lets topic count emerge from density (controlled indirectly via things like `min_cluster_size`).
+- Forced assignment of junk: K-Means puts every point somewhere. HDBSCAN can leave low-density items as outliers (`-1`) instead of polluting a "misc" theme.
+- Topics without labels: K-Means gives you cluster IDs and centroids. BERTopic also produces keyword (and optionally LLM) descriptions so you can skim what a topic might mean before reading dozens of documents. You could do this with K-Means, but as a follow-up step.
+- High-dimensional embedding geometry: Clustering raw high-dim embeddings can be brittle. UMAP reduction is meant to make neighborhood structure easier for the clusterer. But this also assumes that UMAP finds a decent 2D or 3D representation, which is in itself an assumption you should check.
+- Classical topic models' bag-of-words limits: Methods like LDA work from word counts and often struggle with short, messy social/feedback text. BERTopic starts from semantic embeddings, which usually fit lab corpora better.
 
 #### What assumptions does BERTopic make?
+
+- The reduced embedding space has clear dense regions and that those dense regions correspond to actual themes. This is due to the assumptions of the HDBSCAN clustering algorithm, and if for your data this wouldn't work, then you can swap HDBSCAN with another clustering algorithm.
+- You don't choose an exact topic count. Typically, you decide other hyperparameters (e.g., "how big can a cluster be?") and then based on this, a certain number of topics will emerge. Once again, this is specifically a parameter of HDBSCAN, so change accordingly if you swap for another clustering algorithm.
+- Outliers are expected. A large `-1` bucket can be a feature (noise separation) or a bug (too aggressive clustering).
+- UMAP (the default dimensionality reduction algorithm) is stochastic unless you set a seed with `random_state`. Without a seed, reruns can reshuffle topics.
+- Each document gets a single topic. If your document has multiple themes, BERTopic assigns it to a single topic. To get around this, if you know a document will have multiple topics, you can split it into multiple documents beforehand.
+- c-TF-IDF uses basic token counts to extract keywords for a given cluster. It assumes a reasonable tokenizer/vectorizer (language, stopwords, n-grams). Some of the caveats from the "## Approach 1: Classic extraction methods" in [HOW_TO_MINE_TEXT_FOR_FEATURES](HOW_TO_MINE_TEXT_FOR_FEATURES.md) apply.
+- Treat cluster quality and representation quality differently. An LLM can generate feasible labels for a poorly generated cluster.
 
 #### Read this before using BERTopic
 
@@ -171,20 +227,40 @@ If you're planning on using BERTopic, I'd suggest starting with [this guide on B
 
 #### When to use BERTopic
 
-...
+- You do not have a reliable guess for `k`, or sweeping K-Means `k` did not yield stable, readable topics.
+- You want an outlier bucket for off-topic / junk / one-off responses instead of forcing them into themes.
+- You want keyword or LLM topic descriptions as a first pass before turning groups into features (see [HOW_TO_MINE_TEXT_FOR_FEATURES.md](HOW_TO_MINE_TEXT_FOR_FEATURES.md)).
+- Your corpus is large enough that density-based clustering can find structure. Small corpora may overfit or may not converge.
+- Topics may be uneven in size. Since HDBSCAN focuses on density, they are able to recover topics even if the counts of items in each topic aren't equal.
 
 #### When not to use BERTopic
 
-...
-
-### Controlling the number of topics
-
-...
+- You need a simple, fixed partition of exactly `k` groups for a clean figure or a tightly controlled coding scheme — K-Means is often easier to explain and control.
+- Your dataset is tiny (dozens of documents). Density clustering and UMAP can be unstable or overconfident on small `n`.
 
 ### How to interpret topics
 
-...
+For each topic:
 
+- Start with `get_topic_info()` / top keywords.
+- Read representative documents for the topic, plus a random sample of members.
+- Inspect the `-1` outlier topic separately. Ask whether those items are true noise, a missing theme, or a sign that `min_cluster_size` is too high/low. If you can find reasonable groups in the `-1` outlier topic, that might be a sign to try again.
+- Check sizes. A swarm of tiny topics might mean too much fragmentation, while one giant topic might mean that you didn't generate cleanly separable topics.
+- Draft a human-readable label (by hand or LLM), then verify it against held-out documents assigned to that topic.
+- Separate errors by whether they're in (1) grouping or (2) representation: if you have feasible clusters but the labels generated for the cluster are poor, fix the representation layer. Otherwise, if the labels seem reasonable but the clusters are poor, address UMAP or HDBSCAN.
+
+To check generalization, run `.transform` on text held out from fitting and see whether assignments still make sense.
+
+### Best practices around BERTopic
+
+These are covered in detail in [this link](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html) However, to make it explicit:
+
+- [Precompute your embeddings](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html#pre-calculate-embeddings)
+- [Add a seed to prevent randomness](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html#preventing-stochastic-behavior)
+- [Control the number of topics](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html#controlling-number-of-topics)
+- [Make tweaks to the default tokenizer to improve representations](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html#controlling-number-of-topics)
+
+Point any AI agents to [the link](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html) before developing any BERTopic models.
 
 ## Algorithm 3: Hierarchical clustering
 
