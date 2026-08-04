@@ -23,7 +23,19 @@ This depends on your use case. For example:
 - Bigrams may do well for compounds like `civil engagement`, `political party`, and `free speech`.
 - `n-grams` are more niche and likely not worth it unless you have a reason to extract a specific n-gram phrase.
 
+Another fancier approach to consider is [RAKE](https://github.com/u-prashant/RAKE) (this is what ChatGPT pointed me towards when I asked about extraction methods). I'd err on the side of using classic unigram/bigram methods and avoid overcomplicating using less-supported methods like RAKE.
+
 ## Approach 2: Clustering
+
+### Overview of clustering approaches
+
+To see an overview of some clustering approaches you might want to consider, check out [CLUSTERING_ALGORITHMS.md](CLUSTERING_ALGORITHMS.md).
+
+### How do these clusters become features?
+
+...
+
+### Some cons to consider
 
 The con with this is if people cite multiple reasons in one. For example:
 
