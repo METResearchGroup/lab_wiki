@@ -100,8 +100,6 @@ Output: cluster assignment for each point, centroids C = {c_1, ..., c_k}
 3. Return final assignments and centroids
 ```
 
-Optional outer loop used in practice: repeat steps 1–3 several times with different initializations (`n_init`) and keep the run with the lowest within-cluster sum of squares (inertia).
-
 ### When to use/not use K-Means?
 
 #### When to use K-Means
@@ -125,36 +123,27 @@ There is no single correct `k`. Treat it as a research choice, not a metric to o
 
 Some thoughts:
 
-- A quick win is to write a script that runs K-means clustering given `k` centroids, and then run that in a for-loop between some range (e.g., 2-10), and then visualize the clusters. Ideally you could visualize the clusters through some interactive dashboard, such as ...
-
-1. Start from a domain guess: how many distinct themes would you expect a human coder to use?
-2. Sweep a small range around that guess (e.g., guess ± a few).
-3. Use elbow/inertia or silhouette as soft signals only — on text embeddings they are often ambiguous or noisy.
-4. Prefer stability and inspectability: re-run with different seeds and keep a `k` where cluster membership does not churn wildly and where clusters are readable.
-5. Always read examples. A slightly worse silhouette with clearer, more useful themes beats a prettier metric.
-
-Also fix `random_state` and report the embedding model + `k` so others can reproduce your run.
+- A quick win is to write a script that runs K-means clustering given `k` centroids, and then run that in a for-loop between some range (e.g., 2-10), and then visualize the clusters. Ideally you could visualize the clusters through some interactive dashboard in order to investigate the clusters yourself.
+- Another approach is to try the grouping task yourself. Take a random subset of your corpus, say 20 samples, and try to put them into "distinct groups", however you define that. This should also tell you if there are certain groups that you'd like to emerge from your dataset, which can guide your approach.
 
 ### How to interpret clusters
 
-Do not trust cluster IDs alone. For each cluster:
+For each cluster:
 
-- Pull nearest-to-centroid examples (most "prototypical" items).
+- Pull nearest-to-centroid examples. These are the "prototypical" examples of the cluster.
 - Skim a random sample of members, not just the best exemplars.
-- Check size: a tiny cluster may be a real niche theme or noise; a huge cluster may be a dumping ground.
-- Ask whether the grouping matches a research-relevant distinction, not just embedding similarity (synonyms can split; distinct concepts can merge).
-- Optionally draft a short label (by hand or with an LLM), then verify the label against held-out examples from that cluster.
+- Check size of the cluster. A tiny cluster might be niche or may be noise, while a huge cluster might be too vague.
+- As you look at it, see if you can determine a human-readable label for the cluster. You can also use an LLM for this task.
 
-If clusters become features for downstream work, see [HOW_TO_MINE_TEXT_FOR_FEATURES.md](HOW_TO_MINE_TEXT_FOR_FEATURES.md).
+To see if this generalizes, take text outside of the sample used to build the clusters, embed it, assign it to a cluster, and see if the takeaways make sense.
 
 ### Where does K-Means go wrong?
 
-- **Forced partition.** Leftover / heterogeneous items get shoved into some cluster, often creating one large "misc" group.
-- **Wrong unit of analysis.** Multi-topic responses assigned to one cluster look incoherent; split into sentences/phrases first if needed.
-- **Bad `k`.** Too small merges distinct themes; too large fragments one theme into near-duplicates.
-- **Init sensitivity.** Different seeds can reshuffle boundaries — if results change a lot, your clusters may not be stable enough to trust.
-- **Representation mismatch.** If embeddings don't capture the similarity you care about, no choice of `k` will save you.
-- **Spherical assumption.** Elongated or nested themes get cut awkwardly; move to hierarchical clustering or BERTopic when that shows up in inspection.
+- Forced partitioning means everything has to fit into a cluster: You might find that you end up creating a "miscellaneous" cluster from all the other text that don't fit cleanly into any other cluster.
+- Bad `k`: Too small and you don't get distinct groups. Too big and you might make up clusters that aren't really unique.
+- Sensitive to randomness: Different seeds can reshuffle boundaries. Try across a few seeds. If results change as you shuffle seeds, the clusters might not be stable.
+- Representation mismatch: If embeddings don't capture the similarity you care about, no choice of `k` will help. First make sure that embeddings are the right modality for representing your data.
+- Spherical assumption: If the true "ideal cluster" would be elongated or somewhat odd-shaped, K-means may not represent those well.
 
 ## Algorithm 2: BERTopic
 
