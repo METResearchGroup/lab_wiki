@@ -264,4 +264,53 @@ Point any AI agents to [the link](https://maartengr.github.io/BERTopic/getting_s
 
 ## Algorithm 3: Hierarchical clustering
 
-...
+Hierarchical clustering builds a tree of how data points group together. It lets you customize where you want to "cut" or split groups in order to generate groups.
+
+You typically start with each document as its own cluster and repeatedly merge the most similar clusters until everything is connected. The result is a dendrogram you can cut at different heights to get coarser or finer themes. Hierarchical clustering is useful when you expect nested structure (e.g., "politics" splitting into "elections" vs "policy").
+
+This is a pretty niche application, but worth considering if you think there's some hierarchical structure in the sort of topics you'd like to uncover.
+
+We'll keep the discussion here brief, and you can look up details for more information if it's applicable for your use case. For most of the lab use cases, either K-Means or BERTopic generally suffice.
+
+### What is hierarchical clustering?
+
+#### What are the steps? / algorithm pseudocode
+
+The version you will almost always use is agglomerative (bottom-up):
+
+```text
+Input: points X = {x_1, ..., x_n}, a distance metric, a linkage rule
+Output: a merge tree (dendrogram); optionally a flat cluster labeling after a cut
+
+1. Start with n clusters (each point is its own cluster)
+2. While more than one cluster remains:
+   a. Find the two clusters that are closest under the chosen linkage
+   b. Merge them into a new cluster
+   c. Record the merge and the distance at which it happened
+3. Return the full tree
+4. (Optional) Cut the tree at a height or at a target number of clusters
+   to get a flat assignment for downstream use
+```
+
+Unlike K-Means, you do not re-fit from scratch to try a different number of groups. You can cut the same tree at a different level to see what different groups emerge.
+
+#### Linkage criteria
+
+Linkage defines how you measure distance **between clusters** (not just between points). This is the important knob — analogous to choosing `k` in K-Means or `min_cluster_size` in BERTopic/HDBSCAN.
+
+Common options:
+
+- Single linkage: distance = minimum distance between any pair of points across clusters. Can create long "chains" of loosely related items.
+- Complete linkage: distance = maximum pairwise distance across clusters. Tends toward more compact clusters; can be sensitive to outliers.
+- Average linkage: distance = average pairwise distance across clusters. Often a solid default for text embeddings.
+- Ward: merges the pair that least increases within-cluster variance. Often works well when clusters are roughly spherical in embedding space; typically used with Euclidean distance.
+
+### Choosing where to cut the tree
+
+There is no single correct cut. Treat it like choosing `k` in K-means clustering:
+
+Some ideas include:
+
+- Cut to a target number of clusters if you already have an amount in mind (e.g., 8)
+- Cut by merge height / distance: look for a large jump in the dendrogram (a gap where very different clusters finally merge).
+- Manually check like you would in K-Means: hand-group ~20 random samples, then see which cut recovers distinctions you care about.
