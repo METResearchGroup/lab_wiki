@@ -66,6 +66,28 @@ A decent baseline dimensionality to start at would be something like `dim=256`.
 
 ## Algorithm 1: K-Means
 
+### What is K-Means?
+
+...
+
+#### What assumptions does the K-Means algorithm make?
+
+...
+
+### When to use/not use K-Means?
+
+...
+
+### Choosing 'k'
+
+...
+
+### How to interpret clusters
+
+...
+
+### Where does K-Means go wrong?
+
 ...
 
 ## Algorithm 2: BERTopic
