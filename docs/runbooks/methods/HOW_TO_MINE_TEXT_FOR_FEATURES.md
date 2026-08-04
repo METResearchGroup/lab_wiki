@@ -71,5 +71,37 @@ Group 2:
 For example:
 
 ```markdown
+You are helping label clusters of open-ended study feedback about why participants flagged social media posts.
+For each group below, propose a short feature name (2–5 words) and a one-sentence definition.
+Prefer features that could be coded as present/absent on a post. Do not invent themes that aren't supported by the terms.
 
+Group 1:
+Documents:
+- "This post spreads false claims about the election with no sources."
+- "Looks like fake news / conspiracy content meant to mislead people."
+- "The statistics here are inaccurate and taken out of context."
+Keywords: misinformation, false claim, fake news, misleading, inaccurate, conspiracy
+
+Group 2:
+Documents:
+- "The post threatens people who disagree and feels aggressive."
+- "Language that glorifies violence or harm toward a group."
+- "Intimidating tone — reads like an attack, not a discussion."
+Keywords: violence, threatening, aggressive, harm, attack, intimidation
+
+Group 3:
+Documents:
+- "It's just partisan political party talking points, not real civil engagement."
+- "People calling for censorship when this is free speech."
+- "Very polarized / us-vs-them framing around politics."
+Keywords: free speech, censorship, political party, civil engagement, polarized, partisan
+
+Group 4:
+Documents:
+- "The level of vulgarity or the inappropriate writing style (e.g., ALL CAPS)."
+- "Mostly swearing and rude hostility instead of an actual argument."
+- "Tone is inappropriate — shouting in caps and insults."
+Keywords: vulgarity, ALL CAPS, inappropriate tone, rude, swearing, hostility
 ```
+
+Note: this is basically what the [LLM generation step of BERTopic already does](https://maartengr.github.io/BERTopic/getting_started/representation/llm.html), but we can repurpose that for more general feature generation.
