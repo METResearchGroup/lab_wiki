@@ -35,6 +35,12 @@ To see an overview of some clustering approaches you might want to consider, che
 
 ...
 
+## Approach 3: Asking an LLM to give features
+
+...
+
+An approach that I personally like is in [this GitHub README](https://github.com/docwriter-org/mine-writing-rules/tree/main#how-it-was-built).
+
 ### Some cons to consider
 
 The con with this is if people cite multiple reasons in one. For example:

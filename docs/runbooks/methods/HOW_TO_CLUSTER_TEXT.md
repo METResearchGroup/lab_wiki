@@ -2,7 +2,16 @@
 
 ## What is clustering and why do we do it?
 
-...
+Clustering is the process of grouping items so that items in the same group are more similar to each other than to items in other groups. Normally, this means something like documents, posts, responses, sentences, or phrases, represented in a way that lets us measure similarity.
+
+We cluster text for a few recurring reasons in lab research:
+
+- **Discovery without labels.** A lot of our corpora (social media, open-ended study feedback, free-text survey responses) don't have clean labels. Clustering is a way to surface themes or topics without needing a predefined taxonomy up front.
+- **Turning raw text into features.** Clusters often become candidate features for downstream analysis or modeling. See [HOW_TO_MINE_TEXT_FOR_FEATURES.md](HOW_TO_MINE_TEXT_FOR_FEATURES.md).
+- **Exploration before modeling.** Even when you already have a modeling goal, clustering is a strong first pass for understanding what is in the data, what is noisy, and what distinctions actually matter.
+- **Compression and summarization.** Large text corpora are hard to read end-to-end. Clusters give you a smaller set of examples and group summaries to review instead of every individual document.
+
+Clustering doesn't just work automatically or in a vacuum. It's dependent on the quality of data passed into it, assumptions about the clustering model, and a human interpretation of what groups the algorithms discover.
 
 ## Baseline naive clustering approaches
 
@@ -62,6 +71,8 @@ A decent baseline dimensionality to start at would be something like `dim=256`.
 ## Algorithm 2: BERTopic
 
 ...
+
+If you're planning on using BERTopic, I'd suggest starting with [this guide on BERTopic best practices](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html).
 
 ## Algorithm 3: Hierarchical clustering
 
