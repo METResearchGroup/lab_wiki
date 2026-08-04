@@ -68,27 +68,93 @@ A decent baseline dimensionality to start at would be something like `dim=256`.
 
 ### What is K-Means?
 
-...
+K-Means partitions your items into a fixed number of groups, `k`. Each group has a centroid (the average embedding of the points in that group). The algorithm repeatedly assigns every point to the nearest centroid, then recomputes centroids, until assignments stabilize.
+
+For text, you almost always run this on embeddings of your units of meaning (see Setup above), not on raw tokens. The output is a cluster ID per document/response/sentence, plus a centroid you can use to find representative examples.
 
 #### What assumptions does the K-Means algorithm make?
 
-...
+- You choose `k` up front. The algorithm will always produce exactly `k` clusters.
+- Clusters generally converge to be roughly spherical and similar in size in embedding space. This is because we cluster on distance, so if a given cluster would be too oblong or too large in diameter compared to other clusters, then it becomes increasingly likely that outer points will be assigned to other clusters. Consider this as you're interpreting the meaning of the clusters you find, as if you're expecting one cluster to have more samples than another, k-means might be a poor choice.
+- Every point gets a cluster. There is no built-in "noise" or "outlier" bucket.
+- Typically Euclidean distance is used, but you can create your own distance function. If you care more about direction than magnitude, L2-normalize embeddings first so Euclidean distance behaves more like cosine distance.
+- Results are really dependent on initialization (since the algorithm initializes centroids at random). Whenever you're doing k-means, make sure that you add a random seed in order to ensure reproducibility.
+
+#### K-Means algorithm pseudocode
+
+Here's some pseudocode describing how K-Means works, for your intuition:
+
+```text
+Input: points X = {x_1, ..., x_n}, number of clusters k
+Output: cluster assignment for each point, centroids C = {c_1, ..., c_k}
+
+1. Initialize k centroids (e.g., randomly sample k points, or use k-means++)
+2. Repeat until assignments stop changing (or max iterations reached):
+   a. Assignment step:
+      For each point x_i:
+          assign x_i to the nearest centroid
+          (argmin over j of distance(x_i, c_j))
+   b. Update step:
+      For each cluster j:
+          set c_j = mean of all points assigned to cluster j
+3. Return final assignments and centroids
+```
+
+Optional outer loop used in practice: repeat steps 1–3 several times with different initializations (`n_init`) and keep the run with the lowest within-cluster sum of squares (inertia).
 
 ### When to use/not use K-Means?
 
-...
+#### When to use K-Means
+
+- You want a fast, simple first cut after naive baselines.
+- You have a rough idea how many themes you expect (or are willing to try a small range of `k` to find some examples).
+- Themes are fairly distinct and there's not a lot of crossover or blur.
+- You mainly need groupings to inspect that you can then use for other downstream analysis.
+
+K-means make for easily understandable clusters that can lead to interpretable and convincing visualizations in papers. However, beware as they may not converge to clean separable groups like you'd like. If you're luckiy, it might be as easy as varying the number of centroids `k`. Otherwise, you may want to investigatae other clustering algorithms.
+
+#### When to possibly avoid K-Means
+
+- `k` is genuinely unknown and hard to guess. If your task is difficult enough that sweeping a variety of `k` values doesn't work easily, it may be good to try other methods.
+- You expect nested structure (e.g., "politics" splitting into "elections" vs "policy"). It's likely for such a scenario that, if you get a convergence, k-means will discover a general "politics" category.
+- You need an explicit outlier/noise class for junk or off-topic text.
 
 ### Choosing 'k'
 
-...
+There is no single correct `k`. Treat it as a research choice, not a metric to optimize blindly.
+
+Some thoughts:
+
+- A quick win is to write a script that runs K-means clustering given `k` centroids, and then run that in a for-loop between some range (e.g., 2-10), and then visualize the clusters. Ideally you could visualize the clusters through some interactive dashboard, such as ...
+
+1. Start from a domain guess: how many distinct themes would you expect a human coder to use?
+2. Sweep a small range around that guess (e.g., guess ± a few).
+3. Use elbow/inertia or silhouette as soft signals only — on text embeddings they are often ambiguous or noisy.
+4. Prefer stability and inspectability: re-run with different seeds and keep a `k` where cluster membership does not churn wildly and where clusters are readable.
+5. Always read examples. A slightly worse silhouette with clearer, more useful themes beats a prettier metric.
+
+Also fix `random_state` and report the embedding model + `k` so others can reproduce your run.
 
 ### How to interpret clusters
 
-...
+Do not trust cluster IDs alone. For each cluster:
+
+- Pull nearest-to-centroid examples (most "prototypical" items).
+- Skim a random sample of members, not just the best exemplars.
+- Check size: a tiny cluster may be a real niche theme or noise; a huge cluster may be a dumping ground.
+- Ask whether the grouping matches a research-relevant distinction, not just embedding similarity (synonyms can split; distinct concepts can merge).
+- Optionally draft a short label (by hand or with an LLM), then verify the label against held-out examples from that cluster.
+
+If clusters become features for downstream work, see [HOW_TO_MINE_TEXT_FOR_FEATURES.md](HOW_TO_MINE_TEXT_FOR_FEATURES.md).
 
 ### Where does K-Means go wrong?
 
-...
+- **Forced partition.** Leftover / heterogeneous items get shoved into some cluster, often creating one large "misc" group.
+- **Wrong unit of analysis.** Multi-topic responses assigned to one cluster look incoherent; split into sentences/phrases first if needed.
+- **Bad `k`.** Too small merges distinct themes; too large fragments one theme into near-duplicates.
+- **Init sensitivity.** Different seeds can reshuffle boundaries — if results change a lot, your clusters may not be stable enough to trust.
+- **Representation mismatch.** If embeddings don't capture the similarity you care about, no choice of `k` will save you.
+- **Spherical assumption.** Elongated or nested themes get cut awkwardly; move to hierarchical clustering or BERTopic when that shows up in inspection.
 
 ## Algorithm 2: BERTopic
 
