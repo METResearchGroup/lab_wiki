@@ -147,9 +147,44 @@ To see if this generalizes, take text outside of the sample used to build the cl
 
 ## Algorithm 2: BERTopic
 
+BERTopic is ...
+
+I highly recommend combining BERTopic with an LLM in order to generate human-readable descriptions of the topics, see [this guide](https://maartengr.github.io/BERTopic/getting_started/representation/llm.html) for more information.
+
+### What is BERTopic?
+
+#### What are the steps in BERTopic?
+
 ...
 
-If you're planning on using BERTopic, I'd suggest starting with [this guide on BERTopic best practices](https://maartengr.github.io/BERTopic/getting_started/best_practices/best_practices.html).
+#### What problems with other methods does BERTopic try to solve?
+
+...
+
+#### What assumptions does BERTopic make?
+
+#### Read this before using BERTopic
+
+If you're planning on using BERTopic, I'd suggest starting with [this guide on BERTopic](https://maartengr.github.io/BERTopic/getting_started/quickstart/quickstart.html).
+
+### When to use/not use BERTopic
+
+#### When to use BERTopic
+
+...
+
+#### When not to use BERTopic
+
+...
+
+### Controlling the number of topics
+
+...
+
+### How to interpret topics
+
+...
+
 
 ## Algorithm 3: Hierarchical clustering
 
