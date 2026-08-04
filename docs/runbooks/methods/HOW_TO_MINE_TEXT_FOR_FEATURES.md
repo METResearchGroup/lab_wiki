@@ -27,13 +27,8 @@ Another fancier approach to consider is [RAKE](https://github.com/u-prashant/RAK
 
 ## Approach 2: Clustering
 
-### Overview of clustering approaches
+Clustering is another promising way to mine text for features. To see an overview of some clustering approaches you might want to consider, check out [CLUSTERING_ALGORITHMS.md](CLUSTERING_ALGORITHMS.md). A default one to try would be BERTopic, but please review how the algorithm works first so you know all the ways it might fail (and what are some possible alternatives).
 
-To see an overview of some clustering approaches you might want to consider, check out [CLUSTERING_ALGORITHMS.md](CLUSTERING_ALGORITHMS.md).
-
-### How do these clusters become features?
-
-...
 
 ## Approach 3: Asking an LLM to give features
 
@@ -55,17 +50,9 @@ To counteract these .... (TODO: come up with something).
 - Simplest approach: splitting on conjunctions
 - Another approach: ask an LLM to rewrite comments
 
-### Clustering algorithms to explore
-
-BERTopic ...
-
-K-means...
-
-Hierarchical clustering...
-
 ## Combining generated features using an LLM
 
-Whether you use classical methods or clustering to get groups of possible features, the next step is using an LLM. The LLM can be tasked with taking the groups and creating a label for it.
+Whether you use classical methods or clustering to get groups of possible features, you can often pair this with an LLM to generate human-readable labels. This isn't applicable for BERTopic (as LLM label generation is already done natively with BERTopic). The LLM can be tasked with taking the groups and creating a label for it.
 
 A prompt can be something like:
 
@@ -81,7 +68,7 @@ Group 2:
 ...
 ```
 
-The system prompt can be something like:
+For example:
 
 ```markdown
 
