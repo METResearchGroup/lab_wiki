@@ -82,11 +82,36 @@ To counteract these .... (TODO: come up with something).
 
 #### Gotcha 2: Near-duplicate features / false merges
 
-...
+A lot of mined features look similar but are not actually the same concept for research purposes. For example:
+
+- `free speech` vs `anti-censorship`
+- `violence` vs `threatening tone`
+- `misinformation` vs `missing sources`
+
+Embedding similarity, aggressive synonym merging, clustering, and LLM cluster labels will happily collapse these into one feature. Sometimes that's fine. But it might not be for our use case, especially since words treated as synonyms in common speech have very specific technical definitions in social science.
+
+In these cases, merging can be useful, but err on the side of merging conservatively.
+
+Some practices that help:
+
+- Prefer a hardcoded synonym list (even if an LLM helped you draft it offline) over asking an LLM to merge live at runtime. Hardcoded lists are easier to audit and revise.
+- When two candidate features are close, pull example documents for each and read them side by side to see what you would label them as, before merging them together.
+- It's usually better to keep slightly too many features early, then merge later once you've gotten a chance to inspect the data yourself.
+- Don't trust a clean LLM label alone. A label can sound reasonable while the underlying items (e.g., user responses) reference two distinct ideas or concepts.
 
 #### Gotcha 3: Treating discovered features as the final set of features
 
-...
+Feature mining is a discovery step, not the end of the pipeline. The raw set of features you get from frequency counts, clusters, or LLM generation will usually be too long, too overlapping, too rare in places, and too vaguely labeled to use directly as a list of derived model features.
+
+Separate the stages:
+
+1. **Discover** broadly (classic extraction, clustering, LLM feature generation).
+2. **Normalize** (merge synonyms, drop domain-specific noisy terms, drop outlier features).
+3. **Operationalize** into something you can actually use: short name, one-sentence definition, positive/negative examples, and a clear way for others to properly add the same label to other content.
+
+A feature that can't be coded reliably as present/absent (or scored consistently) on your target unit is not ready, even if it showed up often in mining. If you as the domain expert can't do it consistently, then neither can another rater or an LLM.
+
+Also, always spot-check labels against held-out examples before accepting them. LLM-generated labels might sound plausible but you need to make sure that the labels match the actual underlying documents.
 
 ## Combining generated features using an LLM
 
