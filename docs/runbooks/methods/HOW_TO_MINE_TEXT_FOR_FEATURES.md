@@ -29,26 +29,64 @@ Another fancier approach to consider is [RAKE](https://github.com/u-prashant/RAK
 
 Clustering is another promising way to mine text for features. To see an overview of some clustering approaches you might want to consider, check out [CLUSTERING_ALGORITHMS.md](CLUSTERING_ALGORITHMS.md). A default one to try would be BERTopic, but please review how the algorithm works first so you know all the ways it might fail (and what are some possible alternatives).
 
-
 ## Approach 3: Asking an LLM to give features
 
-...
+Two approaches that I like for this are:
 
-An approach that I personally like is in [this GitHub README](https://github.com/docwriter-org/mine-writing-rules/tree/main#how-it-was-built).
+1. [This GitHub README](https://github.com/docwriter-org/mine-writing-rules/tree/main#how-it-was-built).
+2. [This work on LLM-driven feature discovery](https://www.lesswrong.com/posts/WAZWA6FPQvH8okouJ/llm-driven-feature-discovery).
 
-### Some cons to consider
+Both of them have similar pipelines, but it's worth experimenting with both.
 
-The con with this is if people cite multiple reasons in one. For example:
+From the "LLM-driven feature discovery" piece, this is how they do feature discovery on user conversations with an AI agent:
+
+1. Choose a dataset of model transcripts.
+2. Split transcripts into three pieces: user turns, thoughts, and assistant responses.
+3. Ask a black box LLM autorater to generate a set of 10-20 “features” of each transcript piece. By feature we mean notable/interesting/important aspects of the transcript piece; we include the prompt we use below. Note that the autorater only sees one piece at a time.
+4. Get a semantic embedding for each generated feature
+5. Cluster the semantic embeddings separately for user, thoughts, and response features
+6. Ask a language model to name each cluster by giving it 100 random features for each cluster and asking it to “produce a single concise label (around 5 words) that captures the common theme of these features.”.
+
+Basically, the pipeline is:
+
+1. Give an LLM bunches of documents all at once and then ask it to generate features.
+2. Get a semantic embedding of each generated feature.
+3. Cluster the semantic embeddings.
+4. Ask a language model to give a name/label for each cluster, by giving it a random sample of documents from the cluster.
+
+(Note: this is basically the BERTopic pipeline in a nutshell. The same approach can be used in other applications)
+
+That resource also gives us some insight on how these features can be used in downstream ML modeling and development:
+
+> We are also interested in predicting model behavior, so another experiment we run is whether we can predict thought and assistant response features from user features. We train logistic regression probes on the 1000 most common thought and assistant clusters.
+
+Though this is directly for interpretability research, we can take that approach for other use cases. If we find reasonable features through the clusters, we can take those features and, for example, add those features to an existing LLM prompt to see if that improves performance a given task (e.g., classification).
+
+### Some gotchas to consider when mining for features
+
+#### Gotcha 1: A single document has multiple features
+
+A single document might have multiple features. For example, if we're trying to mine for features related to why people censored or moderated certain posts in the study, we might have the following:
 
 - "The level of vulgarity or the inappropriate writing style (e.g., ALL CAPS)."
 - "The malice and lack of real thought behind the post"
 
-These two examples show multiple reasons...
+These two justifications report multiple reasons. We ideally would want to capture these reasons rather than collapsing them into one representation.
 
 To counteract these .... (TODO: come up with something).
 
-- Simplest approach: splitting on conjunctions
-- Another approach: ask an LLM to rewrite comments
+1. Simplest approach: splitting on conjunctions. Cheap and auditable. Fails on nested clauses and “X because Y” structures that aren’t true separate features.
+2. Sentence- or clause-level split, then drop fragments that aren’t reasons (e.g. “I don’t know”). Better than raw conjunction splitting; still misses “vulgarity or ALL CAPS” style coordination inside one clause.
+3. Ask an LLM to rewrite into a list of atomic features (“Extract each distinct moderation reason as its own short phrase”). Usually best quality. But can be costly.
+4. Hybrid: rule-based split first, and send only long/complex leftovers to the LLM.
+
+#### Gotcha 2: Near-duplicate features / false merges
+
+...
+
+#### Gotcha 3: Treating discovered features as the final set of features
+
+...
 
 ## Combining generated features using an LLM
 
