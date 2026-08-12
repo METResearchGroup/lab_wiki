@@ -53,11 +53,36 @@ For example, [this GitHub repository](https://github.com/METResearchGroup/bluesk
 
 ## What are PRs?
 
-...
+A PR, short for "pull request", is a proposed set of changes to a repository. Usually, you make those changes on a separate branch rather than directly in the main version of the project.
+
+For academic work, it can help to think of a PR as a draft submission for a small piece of research work. The PR should make clear:
+
+1. The question or task being addressed.
+2. The approach taken and the important decisions made.
+3. The code, data references, and configuration needed to run the work.
+4. The outputs or artifacts produced, such as tables, figures, processed data, or model checkpoints.
+5. The interpretation of the results and any important limitations.
+
+The PR description provides the high-level narrative of why you did the work you did, while the commits show the work's progression over time. For example, the first commit might add an experiment plan; later commits might add the implementation, run a small validation, execute the full experiment, and write up the results. Together, these create a traceable record of both the final outcome and the decisions that led to it.
 
 This is also a good place to keep in mind future reproducibility, as ideally someone can look at your PR and if they wanted to, they could replicate the artifacts you generated based on the code and steps you defined in the PR itself. This is also another benefit of working with a PR, as all the code that you need to replicate a certain result should be a part of the same PR.
 
 ## Git commits
+
+### What is a commit?
+
+A commit is a saved snapshot of changes to a Git repository. When you make a commit, you are telling Git: “Record the current state of these selected files as one meaningful step in the project.”
+
+For example, rather than making one large commit at the end of an experiment, you might create several commits:
+
+1. `add experiment plan`
+2. `add prompt variants and evaluation configuration`
+3. `add data-processing script`
+4. `run small validation sample`
+5. `save full experiment results`
+6. `write up findings`
+
+This gives the project a readable history. Someone looking at the repository can see not only the final code and outputs, but also the sequence of work that produced them.
 
 ### When should you commit code?
 
