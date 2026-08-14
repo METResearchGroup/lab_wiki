@@ -202,74 +202,78 @@ For a post:
 
 ## Which requests require authentication and which do not?
 
-This section lists endpoints you need to get information about a user or a post. It is not a full dump of the HTTP API. Sources are the official [HTTP API reference](https://docs.bsky.app/docs/category/http-reference), the AT Protocol lexicons, and Bluesky's OpenAPI, as of August 2026. Record types and schema-only defs are omitted.
+This section lists endpoints you need to get information about a user or a post. It is not a full dump of the HTTP API. Sources are the official [HTTP API reference](https://endpoints.bsky.app/), the AT Protocol lexicons, and Bluesky's OpenAPI, as of August 2026. Record types and schema-only defs are omitted.
 
-Public AppView reads such as `getProfile` and `getPostThread` still work without a session. If you send a session, those same calls also fill in `viewer` fields (for example whether you follow the account, or whether you liked the post). Auth is required for a small set of reads that the AppView or Jetstream will not serve anonymously, mainly an account's likes via `getActorLikes`, and Jetstream archive fetches. To get a session for those, call `com.atproto.server.createSession` (or use an app password). Signup, chat, moderation admin, notifications, preferences, and write endpoints are omitted here.
+"No auth" means the call does not need a session. It does not mean it works on `public.api.bsky.app`. AppView reads go to `public.api.bsky.app`. Repo and sync go to a PDS or the relay (`bsky.network`). Labels go to `mod.bsky.app`. Jetstream goes to `jetstream.*.bsky.network`.
 
-Some unspecced and Jetstream archive endpoints are newer than the published docs cards. The link format still matches the HTTP reference slug.
+Public AppView reads such as `getProfile` and `getPostThread` still work without a session. If you send a session, those same calls also fill in `viewer` fields (for example whether you follow the account, or whether you liked the post). Auth is required for a small set of reads that will not serve anonymously, mainly an account's likes via `getActorLikes`, and Jetstream archive fetches. `getActorLikes` is 401 AuthMissing on the PDS/entryway and 400 Profile not found on the public AppView. `com.atproto.server.createSession` (or an app password) mints an AppView/PDS session. Jetstream archives need a separate API token (`Authorization: Bearer ...`), not that session JWT. Signup, chat, moderation admin, notifications, preferences, and write endpoints are omitted here.
+
+Some unspecced, subscription, and Jetstream methods are not on published OpenAPI cards. Where a method is in the HTTP reference, the link is a Scalar hash on [endpoints.bsky.app](https://endpoints.bsky.app/) (old `docs.bsky.app/docs/api/...` slugs 301 to the Scalar homepage and drop the path). Where it is not, the link is the lexicon JSON on GitHub.
 
 ### Requires authentication
 
-- `app.bsky.feed.getActorLikes`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-actor-likes)
-- `network.bsky.jetstream.getBlock`. [Link](https://docs.bsky.app/docs/api/network-bsky-jetstream-get-block)
-- `network.bsky.jetstream.getSegment`. [Link](https://docs.bsky.app/docs/api/network-bsky-jetstream-get-segment)
-- `network.bsky.jetstream.listSegments`. [Link](https://docs.bsky.app/docs/api/network-bsky-jetstream-list-segments)
+- `app.bsky.feed.getActorLikes`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getActorLikes)
+- `network.bsky.jetstream.getBlock`. [Link](https://endpoints.bsky.app/#jetstream/tag/networkbskyjetstream/GET/xrpc/network.bsky.jetstream.getBlock)
+- `network.bsky.jetstream.getSegment`. [Link](https://endpoints.bsky.app/#jetstream/tag/networkbskyjetstream/GET/xrpc/network.bsky.jetstream.getSegment)
+- `network.bsky.jetstream.listSegments`. [Link](https://endpoints.bsky.app/#jetstream/tag/networkbskyjetstream/GET/xrpc/network.bsky.jetstream.listSegments)
+
+### Not public on Bluesky XRPC
+
+`com.atproto.identity.resolveDid` and `com.atproto.identity.resolveIdentity` are not public Bluesky XRPC (AppView 501; PDS/entryway 401 AuthMissing). Public DID JSON is at plc.directory.
+
+- `com.atproto.identity.resolveDid`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/identity/resolveDid.json)
+- `com.atproto.identity.resolveIdentity`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/identity/resolveIdentity.json)
 
 ### Doesn't require authentication
 
 Profiles, search, and identity:
 
-- `app.bsky.actor.getProfile`. [Link](https://docs.bsky.app/docs/api/app-bsky-actor-get-profile)
-- `app.bsky.actor.getProfiles`. [Link](https://docs.bsky.app/docs/api/app-bsky-actor-get-profiles)
-- `app.bsky.actor.searchActors`. [Link](https://docs.bsky.app/docs/api/app-bsky-actor-search-actors)
-- `com.atproto.identity.resolveDid`. [Link](https://docs.bsky.app/docs/api/com-atproto-identity-resolve-did)
-- `com.atproto.identity.resolveHandle`. [Link](https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle)
-- `com.atproto.identity.resolveIdentity`. [Link](https://docs.bsky.app/docs/api/com-atproto-identity-resolve-identity)
+- `app.bsky.actor.getProfile`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyactor/GET/xrpc/app.bsky.actor.getProfile)
+- `app.bsky.actor.getProfiles`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyactor/GET/xrpc/app.bsky.actor.getProfiles)
+- `app.bsky.actor.searchActors`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyactor/GET/xrpc/app.bsky.actor.searchActors)
+- `com.atproto.identity.resolveHandle`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotoidentity/GET/xrpc/com.atproto.identity.resolveHandle)
 
 Posts, threads, and engagement:
 
-- `app.bsky.feed.getAuthorFeed`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-author-feed)
-- `app.bsky.feed.getLikes`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-likes)
-- `app.bsky.feed.getPostThread`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-post-thread)
-- `app.bsky.feed.getPosts`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-posts)
-- `app.bsky.feed.getQuotes`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-quotes)
-- `app.bsky.feed.getRepostedBy`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-reposted-by)
-- `app.bsky.feed.searchPosts`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-search-posts)
-- `app.bsky.feed.searchPostsV2`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-search-posts-v2)
-- `app.bsky.unspecced.getPostThreadV2`. [Link](https://docs.bsky.app/docs/api/app-bsky-unspecced-get-post-thread-v2)
-- `app.bsky.unspecced.getPostThreadOtherV2`. [Link](https://docs.bsky.app/docs/api/app-bsky-unspecced-get-post-thread-other-v2)
-- `app.bsky.embed.getEmbedExternalView`. [Link](https://docs.bsky.app/docs/api/app-bsky-embed-get-embed-external-view)
+- `app.bsky.feed.getAuthorFeed`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getAuthorFeed)
+- `app.bsky.feed.getLikes`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getLikes)
+- `app.bsky.feed.getPostThread`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getPostThread)
+- `app.bsky.feed.getPosts`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getPosts)
+- `app.bsky.feed.getQuotes`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getQuotes)
+- `app.bsky.feed.getRepostedBy`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getRepostedBy)
+- `app.bsky.feed.searchPosts`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.searchPosts). Partially public: lexicon allows providers to require auth; live, 200 on `api.bsky.app`, 403 HTML (WAF) on `public.api.bsky.app`.
+- `app.bsky.feed.searchPostsV2`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/searchPostsV2.json). Same caveat as `searchPosts`.
+- `app.bsky.unspecced.getPostThreadV2`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/unspecced/getPostThreadV2.json)
+- `app.bsky.unspecced.getPostThreadOtherV2`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/unspecced/getPostThreadOtherV2.json)
+- `app.bsky.embed.getEmbedExternalView`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/embed/getEmbedExternalView.json)
 
 Graph and other public records on an account:
 
-- `app.bsky.graph.getFollowers`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-followers)
-- `app.bsky.graph.getFollows`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-follows)
-- `app.bsky.graph.getList`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-list)
-- `app.bsky.graph.getLists`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-lists)
-- `app.bsky.graph.getRelationships`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-relationships)
-- `app.bsky.graph.getActorStarterPacks`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-actor-starter-packs)
-- `app.bsky.graph.getStarterPack`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-starter-pack)
-- `app.bsky.graph.getStarterPacks`. [Link](https://docs.bsky.app/docs/api/app-bsky-graph-get-starter-packs)
-- `app.bsky.feed.getActorFeeds`. [Link](https://docs.bsky.app/docs/api/app-bsky-feed-get-actor-feeds)
+- `app.bsky.graph.getFollowers`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getFollowers)
+- `app.bsky.graph.getFollows`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getFollows)
+- `app.bsky.graph.getList`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getList)
+- `app.bsky.graph.getLists`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getLists)
+- `app.bsky.graph.getRelationships`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getRelationships)
+- `app.bsky.graph.getActorStarterPacks`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getActorStarterPacks)
+- `app.bsky.graph.getStarterPack`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getStarterPack)
+- `app.bsky.graph.getStarterPacks`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskygraph/GET/xrpc/app.bsky.graph.getStarterPacks)
+- `app.bsky.feed.getActorFeeds`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/appbskyfeed/GET/xrpc/app.bsky.feed.getActorFeeds)
 
 PDS and sync (raw repo, records, blobs, firehose):
 
-- `com.atproto.repo.describeRepo`. [Link](https://docs.bsky.app/docs/api/com-atproto-repo-describe-repo)
-- `com.atproto.repo.getRecord`. [Link](https://docs.bsky.app/docs/api/com-atproto-repo-get-record)
-- `com.atproto.repo.listRecords`. [Link](https://docs.bsky.app/docs/api/com-atproto-repo-list-records)
-- `com.atproto.sync.getBlob`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-blob)
-- `com.atproto.sync.getBlocks`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-blocks)
-- `com.atproto.sync.getCheckout`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-checkout)
-- `com.atproto.sync.getHead`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-head)
-- `com.atproto.sync.getLatestCommit`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-latest-commit)
-- `com.atproto.sync.getRecord`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-record)
-- `com.atproto.sync.getRepo`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-repo)
-- `com.atproto.sync.getRepoStatus`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-get-repo-status)
-- `com.atproto.sync.listBlobs`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-list-blobs)
-- `com.atproto.sync.listRepos`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-list-repos)
-- `com.atproto.sync.listReposByCollection`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-list-repos-by-collection)
-- `com.atproto.sync.subscribeRepos`. [Link](https://docs.bsky.app/docs/api/com-atproto-sync-subscribe-repos)
-- `com.atproto.label.queryLabels`. [Link](https://docs.bsky.app/docs/api/com-atproto-label-query-labels)
-- `com.atproto.label.subscribeLabels`. [Link](https://docs.bsky.app/docs/api/com-atproto-label-subscribe-labels)
-- `com.atproto.temp.fetchLabels`. [Link](https://docs.bsky.app/docs/api/com-atproto-temp-fetch-labels)
-- `network.bsky.jetstream.getZstdDictionary`. [Link](https://docs.bsky.app/docs/api/network-bsky-jetstream-get-zstd-dictionary)
+- `com.atproto.repo.describeRepo`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotorepo/GET/xrpc/com.atproto.repo.describeRepo)
+- `com.atproto.repo.getRecord`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotorepo/GET/xrpc/com.atproto.repo.getRecord)
+- `com.atproto.repo.listRecords`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotorepo/GET/xrpc/com.atproto.repo.listRecords)
+- `com.atproto.sync.getBlob`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getBlob)
+- `com.atproto.sync.getBlocks`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getBlocks)
+- `com.atproto.sync.getLatestCommit`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getLatestCommit)
+- `com.atproto.sync.getRecord`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getRecord)
+- `com.atproto.sync.getRepo`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getRepo)
+- `com.atproto.sync.getRepoStatus`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.getRepoStatus)
+- `com.atproto.sync.listBlobs`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.listBlobs)
+- `com.atproto.sync.listRepos`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.listRepos)
+- `com.atproto.sync.listReposByCollection`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotosync/GET/xrpc/com.atproto.sync.listReposByCollection). Public on the relay; 401 on the PDS.
+- `com.atproto.sync.subscribeRepos`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/sync/subscribeRepos.json)
+- `com.atproto.label.queryLabels`. [Link](https://endpoints.bsky.app/#bluesky-app/tag/comatprotolabel/GET/xrpc/com.atproto.label.queryLabels)
+- `com.atproto.label.subscribeLabels`. [Link](https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/label/subscribeLabels.json)
+- `network.bsky.jetstream.getZstdDictionary`. [Link](https://github.com/bluesky-social/jetstream/blob/main/lexicons/network/bsky/jetstream/getZstdDictionary.json)
