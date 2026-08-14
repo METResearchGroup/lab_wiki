@@ -27,3 +27,18 @@ Bluesky basically open-sources all their data (which is why it's so useful for a
 This part requires some deeper understanding of how Bluesky works, as well as comparing it to how tech companies generally work.
 
 First, read the ["How does Bluesky store data?"](WHAT_IS_BLUESKY.md) section, then come back to this part.
+
+### What's worked best
+
+The most direct way to go about it is to use some combination of the `listRepos` and `getRepo` endpoint. These allow us to query the PDSes themselves to get the info that we need.
+
+# TODO: read up on:
+https://cursor.com/agents/bc-df908850-fb4c-4bb2-a703-c3bee755cfd6?branch=cursor%2Fdid-sync-experiment-plan-cfd6
+
+### What we tried before
+
+To save you future time spinning on other approaches, here's some stuff we tried before without success, and why:
+
+- Using the PLC endpoint
+- Using Jetstream: (Jetstream only maintains records for the past 24 hours)
+- API calls (don't scale well)
