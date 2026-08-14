@@ -1,6 +1,6 @@
 # What data is available in Bluesky?
 
-...
+What data can we expect to get in Bluesky and what's generally not available or has to be computed on your end? Here's a brief primer.
 
 ## Question 1: How do I get data about an account on Bluesky?
 
@@ -60,7 +60,43 @@ If you get the data directly from the PDS via `getRepo`, the following is availa
 
 ### Q2 Method 1: API
 
-...
+A Bluesky post is identified by its AT-URI, which looks like `at://did:plc:alice123/app.bsky.feed.post/3kxyz`. That URI has the author's DID, the collection (`app.bsky.feed.post`), and the record key. Bluesky's own docs for threads are in [Viewing threads](https://docs.bsky.app/docs/tutorials/viewing-threads). Auth is optional. Unauthenticated calls still return the public post. Authenticated calls also fill in `viewer` fields (whether you liked, reposted, or bookmarked it, and whether replies or embeds are disabled for you).
+
+Via the API, the appropriate endpoints that you'll need are:
+
+- [`app.bsky.feed.getPosts`](https://docs.bsky.app/docs/api/app-bsky-feed-get-posts): one or more posts, by AT-URI. Query param is `uris` (repeat the param, max 25). Example: `GET https://public.api.bsky.app/xrpc/app.bsky.feed.getPosts?uris=at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3l6oveex3ii2l`
+- [`app.bsky.feed.getPostThread`](https://docs.bsky.app/docs/api/app-bsky-feed-get-post-thread): one post plus its parents and replies. Query param is `uri`. Optional `depth` (reply levels, default 6) and `parentHeight` (parent levels, default 80). A node in the tree can be a real post, a `notFoundPost` (deleted or taken down), or a `blockedPost`.
+
+If you want every post by an account rather than one known URI, use [`app.bsky.feed.getAuthorFeed`](https://docs.bsky.app/docs/api/app-bsky-feed-get-author-feed). If you want who liked or reposted a given post, that is a separate call (`app.bsky.feed.getLikes` / `app.bsky.feed.getRepostedBy`), not part of the post object itself.
+
+The schemas for these are in the AT Protocol lexicons:
+
+- Endpoints: [`app.bsky.feed.getPosts`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/getPosts.json), [`app.bsky.feed.getPostThread`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/getPostThread.json)
+- Hydrated post type: [`app.bsky.feed.defs#postView`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/defs.json)
+- Raw post record (what sits inside `record`): [`app.bsky.feed.post`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/post.json)
+
+The fields you can expect, at time of writing, are the fields on `postView`. Required fields are `uri`, `cid`, `author`, `record`, and `indexedAt`. Everything else can be missing.
+
+Identity and the post itself:
+
+- `uri`: AT-URI of the post
+- `cid`: content hash of this version of the record
+- `author`: a basic profile (`did`, `handle`, `displayName`, `avatar`, and so on). Same shape as `profileViewBasic` from Question 1, not the full detailed profile
+- `record`: the raw `app.bsky.feed.post` record. Required fields on that record are `text` and `createdAt`. Optional fields are `facets` (mentions, links, hashtags in the text), `reply` (root and parent URIs if this is a reply), `embed` (images, video, link card, quoted post), `langs`, `labels` (self-labels / content warnings), and `tags`
+- `embed`: the AppView's hydrated version of that embed (CDN image URLs, quoted-post preview, and so on)
+- `indexedAt`: when the AppView last indexed this post
+
+Counts and extras that the AppView computes (these are not stored as simple fields on the post record in the PDS):
+
+- `likeCount`, `repostCount`, `replyCount`, `quoteCount`, `bookmarkCount`
+- `labels`: moderation labels on the post
+- `threadgate`: who is allowed to reply, if the author set a threadgate
+
+Only present (or only meaningful) when you are authenticated:
+
+- `viewer`: AT-URIs of *your* like or repost records if you have them, plus `bookmarked`, `threadMuted`, `replyDisabled`, `embeddingDisabled`, and `pinned`
+
+What this API does *not* give you: the full list of likers, reposters, or every reply in a huge thread (thread depth is capped by `depth`). `getPosts` is the indexed post card, not a dump of the whole repo. For the raw post record as stored on the PDS (`app.bsky.feed.post`), see Method 2 below. That record has the text, timestamp, reply pointers, embeds, langs, tags, and self-labels. It does not have like/repost/reply/quote counts.
 
 ### Q2 Method 2: PDS backfill
 
