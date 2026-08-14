@@ -32,13 +32,42 @@ First, read the ["How does Bluesky store data?"](WHAT_IS_BLUESKY.md) section, th
 
 The most direct way to go about it is to use some combination of the `listRepos` and `getRepo` endpoint. These allow us to query the PDSes themselves to get the info that we need.
 
-# TODO: read up on:
-https://cursor.com/agents/bc-df908850-fb4c-4bb2-a703-c3bee755cfd6?branch=cursor%2Fdid-sync-experiment-plan-cfd6
+- Use `listRepos` if you need a list of all possible DIDs that you can get info for.
+- Use `getRepo` to get all the data for a given repo.
+
+We learned during testing that when you make an API request to the `getRepo` endpoint, e.g., `GET https://bsky.network/xrpc/com.atproto.sync.getRepo?did=did:plc:EXAMPLE`, what happens is:
+
+1. Request hits Relay (`bsky.network`).
+2. Relay already knows (from its index / prior sync) where that repo lives.
+3. Common case we observed: Relay answers with 302 and a Location like
+`https://<pds-host>/xrpc/com.atproto.sync.getRepo?did=did:plc:EXAMPLE`
+4. httpx follows that to the PDS.
+5. PDS returns 200 + CAR bytes (or 400 with RepoNotFound / RepoTakendown, etc.).
+6. If the redirected host doesn’t resolve → our pds_unreachable.
+
+This is what we found to be the most efficient way to get records for a given user's DID. However, this only fetches records that are stored in the repo, which may not be all the records that you want or need (see [our writeup on what data is available on Bluesky](WHAT_DATA_IS_AVAILABLE_IN_BLUESKY.md))
 
 ### What we tried before
 
-To save you future time spinning on other approaches, here's some stuff we tried before without success, and why:
+To save you future time spinning on other approaches, here's some stuff we tried before without success, and why.
 
-- Using the PLC endpoint
-- Using Jetstream: (Jetstream only maintains records for the past 24 hours)
-- API calls (don't scale well)
+For actual implementation, check out these PRs:
+
+- [Trying different approaches towards backfilling](https://github.com/METResearchGroup/lab_data_integrations_interface/pull/158)
+- [Jetstream experimentation](https://github.com/METResearchGroup/lab_data_integrations_interface/pull/5)
+
+#### Using the PLC endpoint
+
+The "proper" way to do this is something like:
+
+- Resolve DID via PLC -> DID document
+- Read the PDS service endpoint from that doc
+- Call getRepo on that host
+
+This is OK, though requires an extra round trip to the PLC server.
+
+We also tried enumerating the PLC docs from the PLC server to get a possible list of DIDs to sync. This doesn't work as the PLC server contains too many DIDs, many of which are unreachable, deleted, etc.
+
+#### Using Jetstream
+
+We discovered during implementation that Jetstream only maintains records for the past 24 hours. Therefore it's not particularly useful for backfills. Great though for a slightly less cumbersome alternative to the firehose.
