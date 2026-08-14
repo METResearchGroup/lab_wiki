@@ -2,6 +2,8 @@
 
 What data can we expect to get in Bluesky and what's generally not available or has to be computed on your end? Here's a brief primer.
 
+**Note on AI usage**: AI was used to create these docs. However, it references specific documentation pages and was cross-checked by Mark, after manually writing all the other docs in this folder.
+
 ## Question 1: How do I get data about an account on Bluesky?
 
 ### Q1 Method 1: API
@@ -52,9 +54,35 @@ What this API does *not* give you, even though people often assume it does: the 
 
 ### Q1 Method 2: PDS backfill
 
+`getRepo` downloads the account's repository as a CAR file (a binary archive of every current public record in that repo). How to call it, and how the relay redirects to the right PDS, is in [How do we get Bluesky data?](HOW_DO_WE_GET_BLUESKY_DATA.md). You can also pull one collection at a time with `com.atproto.repo.listRecords`, or one record with `com.atproto.repo.getRecord`. The repo is the current public state. Deleted records are gone.
+
+The important constraint is that a repo only stores what *this* account wrote. Alice's repo has Alice's profile, Alice's posts, the accounts Alice follows, and the likes Alice made. It does not have Alice's followers, likes on Alice's posts, or any of the AppView counts.
+
 If you get the data directly from the PDS via `getRepo`, the following is available to you:
 
-- ...
+- **`app.bsky.actor.profile`** (rkey is always `self`): the raw profile record. Fields, at time of writing, are `displayName`, `description`, `pronouns`, `website`, `avatar` and `banner` (blob refs, not CDN URLs), `labels` (self-labels only), `joinedViaStarterPack`, `pinnedPost`, and `createdAt`. Schema: [`app.bsky.actor.profile`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/actor/profile.json).
+- **`app.bsky.actor.status`** (rkey `self`): live / status overlay, if they set one.
+- **`app.bsky.actor.contentVisibilityDeclaration`** (rkey `self`): whether they asked to be hidden from algorithmic recommendations.
+- **`app.bsky.graph.follow`**: who *they* follow. Each record is `{ subject: <DID>, createdAt }`. This is how you get a follow list from a backfill. You do *not* get who follows them.
+- **`app.bsky.graph.block`**: who they block. Blocks are public on Bluesky.
+- **`app.bsky.graph.list`**, **`listitem`**, **`listblock`**: lists they created, members of those lists, and whole-list blocks.
+- **`app.bsky.graph.starterpack`**: starter packs they created.
+- **`app.bsky.graph.verification`**: verification records *they issued* (only meaningful if the issuer is a trusted verifier).
+- **`app.bsky.feed.generator`**: custom feeds they publish.
+- **`app.bsky.labeler.service`** (rkey `self`): present if the account is a labeler.
+- Their own **`app.bsky.feed.post`**, **`like`**, and **`repost`** records (activity they authored). See Question 2.
+- **Blobs** (avatars, banners, images): not inside the CAR. Use `com.atproto.sync.listBlobs` / `getBlob`. See [Download and parse repository exports](https://atproto.com/blog/repo-export).
+
+What you will *not* find in this repo, even though `getProfile` returns them:
+
+- `handle` (that lives in the DID document / PLC directory, and can change)
+- `followersCount`, `followsCount`, `postsCount` (you can *count* follows and posts in this repo, but follower count requires other people's repos)
+- `followers` as a list (those are `follow` records in *other* repos whose `subject` is this DID)
+- AppView `labels` from third-party labelers
+- `viewer` relationship fields
+- mutes, bookmarks, and app preferences (those are private and are not in the public repo)
+
+The official note from Bluesky is the same: [repo export](https://atproto.com/blog/repo-export) includes posts and likes, and does not include mutes or private list subscriptions.
 
 ## Question 2: How do I get data about a post on Bluesky?
 
@@ -100,4 +128,25 @@ What this API does *not* give you: the full list of likers, reposters, or every 
 
 ### Q2 Method 2: PDS backfill
 
-- ...
+A post in a repo is one record in the author's `app.bsky.feed.post` collection. The path in the CAR is `app.bsky.feed.post/<rkey>`. The AT-URI is `at://<author-did>/app.bsky.feed.post/<rkey>`. You can download the whole author repo with `getRepo`, list only posts with `com.atproto.repo.listRecords?collection=app.bsky.feed.post`, or fetch one post with `com.atproto.repo.getRecord` (same `repo` + `collection` + `rkey` split described in [Bluesky architecture](BLUESKY_ARCHITECTURE.md)).
+
+The post record does not store engagement. A like of this post is a record in the *liker's* repo. A reply is a separate post in the *replier's* repo, with `reply.parent` / `reply.root` pointing at this URI. A quote is another post whose embed points at this URI. That is why a single `getRepo` cannot give you like counts, the like list, or the full thread.
+
+If you get the data directly from the PDS, the following is available to you for a post:
+
+- **`app.bsky.feed.post`**: the raw post. Required fields are `text` and `createdAt`. Optional fields, at time of writing, are `facets` (mentions, URLs, hashtags), `reply` (`root` and `parent` strong refs), `embed` (images, video, external link, quoted record, or record-plus-media), `langs`, `labels` (self-labels / content warnings), `tags`, and the deprecated `entities` field. Schema: [`app.bsky.feed.post`](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/post.json). Image and video bytes are blob refs on the embed. Fetch those with `getBlob`, not from the CAR.
+- **`app.bsky.feed.threadgate`**: if the author limited who can reply. Same rkey as the root post, in the same repo. Fields: `post`, `allow` (mention / follower / following / list rules), `hiddenReplies`, `createdAt`.
+- **`app.bsky.feed.postgate`**: if the author limited embedding or detached quote posts. Same rkey as the post. Fields: `post`, `embeddingRules`, `detachedEmbeddingUris`, `createdAt`.
+
+In *this* author's repo you will also see **`app.bsky.feed.like`** and **`app.bsky.feed.repost`**, but those are likes and reposts *this author made of other posts*. Each is `{ subject: { uri, cid }, createdAt }`. They are not likes or reposts *of* the post you are studying.
+
+What you will *not* find on the post record itself, even though `getPosts` returns them:
+
+- `likeCount`, `repostCount`, `replyCount`, `quoteCount`, `bookmarkCount`
+- the list of accounts that liked, reposted, replied, or quoted
+- hydrated `author` profile and hydrated `embed` (CDN URLs, quoted-post preview)
+- AppView `labels` from third-party labelers
+- `viewer` fields (whether *you* liked it)
+- bookmarks (private)
+
+To reconstruct those from PDS data alone, you have to scan other repos (or use the firehose / an AppView). For most research questions that need counts or threads, the AppView API in Method 1 is the right tool. Use a PDS backfill when you need the raw authored records, a full user dump, or data the AppView does not keep.
