@@ -2,12 +2,18 @@
 
 For making studies, we need to deploy an app. We have been wanting to find a systematized way to do this. The typical way that a coding agent will tell you to do it is to use AWS. Do not do this. This is an overly complicated way of doing it that will take you longer than it needs to actually create it, plus it costs more.
 
-What we can do instead is use a combination of the following:
+What we can do instead is use a combination of the following free accounts:
 
 - (Frontend) [Vercel](https://vercel.com/): Vercel hosts the part of the app that people open in a browser. You connect a GitHub repo, and Vercel builds the site, puts it on a public URL, and updates that URL when you push new code.
 - (Backend) [Railway](https://railway.com/): Railway hosts the part of the app that runs in the background. You deploy a server, a database, or a worker, and Railway keeps that process running and gives you logs, env vars, and a URL for the API.
 
-Use Railway for the backend, and use Vercel for the pages people see.
+Use Railway for the backend, and use Vercel for the pages people see. There should be a free trial or tier option, LMK (Mark) if it's asking for a charge as it shouldn't but it might push you towards paid options.
+
+## IMPORTANT CAVEAT: SHUT DOWN THE SERVERS WHEN NOT USING
+
+Railway is a persistent server, while Vercel builds on-demand.
+
+When you use Railway, it will *keep running*. Studies don't last in perpetuity, so once your study is done, shut down the server to avoid using up the free credits.
 
 ## Options
 
