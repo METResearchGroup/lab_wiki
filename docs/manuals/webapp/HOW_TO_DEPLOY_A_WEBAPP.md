@@ -9,6 +9,26 @@ What we can do instead is use a combination of the following:
 
 Use Railway for the backend, and use Vercel for the pages people see.
 
+## Options
+
+### Option 1: Full frontend and backend
+
+For complicated apps with a fully-fledged frontend and backend, you want both Vercel and Railway.
+
+### Option 2: Backend-only (API + static templates)
+
+For simple apps, an API that serves static templates might be enough. In this case, you only need Railway.
+
+### Which one is right for me?
+
+Pass this prompt to your AI agent:
+
+```markdown
+Review my application and my specs. Advise on whether we need a full frontend and backend or just the backend only. We prefer the backend only if the application that we're building can be done easily enough with a simple, fast API plus static templates, and we prefer that for the majority of applications. On the side of creating a full Next.js app and a Railway backend, only if our experimental design is sufficiently complicated that we will need these steps.
+
+Grill the user with the grill-me skill in https://github.com/mark-torres10/ai_tools/blob/main/skills/grill-me/SKILL.md to get more details, and then advise the user on a feasible next path.
+```
+
 ## Setup
 
 Create personal accounts for each of these providers.
@@ -27,6 +47,12 @@ A typical app setup for us will have the following:
 ## Instructions to tell your AI Agent
 
 Tell your AI agent the following, which will manage setting up the starter code for the frontend and backend, deploying it, and then prompt you to actually start implementation.
+
+This assumes that you're using a tool like Cursor or Codex or Claude Code to do your work. Feel free to ask me (Mark) for alternative steps if not.
+
+### Instructions for Option 1
+
+If going with Option 1, give the full prompt.
 
 ```markdown
 Create two folders, frontend/ and backend/.
@@ -59,4 +85,28 @@ Create a docs/runbooks/ in the user's GitHub repo, if it doesn't exist, and add 
 Then update the user's AGENTS.md file (if it exists in root, else create it) to indicate (1) that we use Vercel and Railway for deployment, (2) code lives in frontend/ and backend/ and (3) we use the `HOW_TO_BUILD_FEATURES.md` to define how we ship code.
 ```
 
-This assumes that you're using a tool like Cursor or Codex or Claude Code to do your work. Feel free to ask me (Mark) for alternative steps if not.
+### Instructions for Option 2
+
+If going with Option 2, give the following smaller prompt:
+
+```markdown
+Create a backend/ folder:
+
+- In backend/, this will be a FastAPI bcakend, deployed to Railway. Set up the FastAPI app scaffolding. Create a "Hello World" example.
+
+Then, make sure and prompt the user to set up Railway CLI and MCP access, if not already enabled. Check the environment for this.
+
+Once this is done, open a PR for the user with the Hello World backend example. Then merge it in. Then review the Railway deployment to see if they have been successfully deployed. Loop until you see successful deployments. Then give the user the public-facing URL for the Railway server.
+
+Then ask the user what needs to be built next, and walk them through this workflow:
+
+- Get specs
+- Build
+- Open PR
+- Merge PR
+- See deployment
+
+Create a docs/runbooks/ in the user's GitHub repo, if it doesn't exist, and add a HOW_TO_BUILD_FEATURES.md with that 5-step process.
+
+Then update the user's AGENTS.md file (if it exists in root, else create it) to indicate (1) that we use Railway for deployment, (2) code lives in backend/ and (3) we use the `HOW_TO_BUILD_FEATURES.md` to define how we ship code.
+```
