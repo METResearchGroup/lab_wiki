@@ -14,7 +14,7 @@
 ## Working hours
 
 - Working hours are 10–5, M–F, with the exception of holidays.
-- If you are going on vacation, please let me know in advance.
+- If you are going on vacation, please let Billy know in advance.
 
 ## Communication
 
