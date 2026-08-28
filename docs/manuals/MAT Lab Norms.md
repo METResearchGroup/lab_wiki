@@ -64,7 +64,7 @@ Generative AI is now part of how research gets done, and I'd rather we be delibe
 
 ### Practical rules
 
-- Don't paste unpublished data, participant data, or other people's unpublished manuscripts into third-party AI tools.
+- Don't upload any identifiable data into third-party AI tools.
 - Disclose AI use as required by the journal, conference, or funder. Assume you will need to describe what you used and how.
 - AI tools are not authors and cannot be credited under [CRediT](https://credit.niso.org/). You are accountable for everything that goes out under your name, including anything a model got wrong.
 - If you're unsure whether a particular use is appropriate, ask me. I'd much rather have that conversation early.
