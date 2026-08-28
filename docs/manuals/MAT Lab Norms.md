@@ -56,7 +56,7 @@ Generative AI is now part of how research gets done, and I'd rather we be delibe
 ### Principles
 
 - **Use GenAI in proportion to how well you already know something.** The temptation to lean on it will be strongest exactly where you find the work hardest — which is exactly where the learning is. It will also happily feed your productive-procrastination habits. Fight that.
-- **Know which parts of your work are load-bearing.** Can you defend a choice, state what would falsify your result, or explain why this analysis and not another one? Those decisions need to be yours.
+- **Know which parts of your work are the most critical.** Can you defend a choice, state what would falsify your result, or explain why this analysis and not another one? Those decisions need to be yours.
 - **These tools are sycophantic.** They will tell you what you want to hear and won't reliably tell you when you're wrong. Agreement from a model is not evidence that you're right.
 - **Quantity is not the goal.** Hiring committees are starting to ask what you can do that a chatbot subscription cannot. If the honest answer is "produce more of the same," that's a problem.
 - **Ask others to help hold you accountable.** Your mentors and peers can help keep you honest about how you're using these tools. Use them for that.
