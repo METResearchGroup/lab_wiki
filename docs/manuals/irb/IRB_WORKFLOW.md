@@ -6,7 +6,7 @@ Submitting a human-subjects research study at Northwestern University may requir
 
 To initiate an IRB submission, log in to the [eIRB+ system](https://irb.northwestern.edu/submitting-to-the-irb/eirb/). If you are off campus, remember to use the off-campus access option provided on the website.
 
-## Documents and File Organization
+## What to Submit: Documents and File Organization
 
 Before preparing your submission:
 
