@@ -11,6 +11,8 @@ When you upload/download anything to/from S3, you'll need to specify both of the
 
 You also need to choose an S3 bucket that already exists, or create one on the S3 website.
 
-Log into the lab AWS account, using the instructions from NU IT (follow the general access instructions): https://www.it.northwestern.edu/support/login/aws.html
+Log into the lab AWS account, using the instructions from NU IT (follow the general access instructions). [Link here](https://www.it.northwestern.edu/support/login/aws.html)
 
-Once logged in, look up "S3" in the console. This should give you a list of buckets that exist already.
+Once logged in, look up "S3" in the console. This should give you a list of buckets that exist already. Either use an existing one or create a new one.
+
+![S3 Buckets Example](static/s3_buckets.png)
