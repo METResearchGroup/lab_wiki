@@ -1,19 +1,11 @@
 # Basic tips for prompt tuning
 
-## Basic tips
+As you work on prompts, here are some basic tips for manually improving the prompts yourself:
 
-...
-
-## Advanced tips
-
-### `dspy`
-
-...
-
-### GEPA
-
-...
-
-### A real example
-
-...
+1. **Make sure that your task is as unambiguous as possible**. If you want the LLM to generate a label, make sure that that label has a well-defined set of distinct classes. If you want the LLM to generate free text, be specific about how long the free text should be, what sort of information should be in the free text, as well as categories for what belongs in the free text response.
+2. **Add a few short examples at the end of your prompt**. Ideally, add a few examples of what you actually want. For example, if you want the LLM to generate labels presented as pairs of stimulus and a response, if you wanted to generate some kind of text, give examples of what good and bad text look like.
+3. **Try to keep prompts shorter where possible**. Everything added to a prompt should earn its place. Additional information in a prompt, at the very least, just increases the number of tokens used, which increases the cost of your prompt. In the worst case, additional information might actually distract the LLM and therefore make it perform more poorly.
+4. **When making prompts, think about how you would instruct a person to do this task**. Be as specific as possible while still maintaining clarity. Imagine if you had to pay a human annotator to do the thing that you want them to do. How specific would you need to make the instructions? What are the ways you can imagine this being interpreted or someone doing it incorrectly? Run through that exercise yourself to try to pin down what you want to put in the prompt.
+5. **Start long, then cut. It's very likely that it'll be easier to make a long prompt than it is to make a short prompt**. It's okay to start long, but see what you can cut in order to still maintain performance. I suggest having a representative sample of what good and bad results look like. For example, you may have 10 posts that you want to label with an LLM. Make the prompts as long as possible first, and then start cutting things down until the performance begins to degrade. You can do a similar thing with generating example text, where you can actually have an LLM as a judge, grade the quality of the text based on some criteria you set. You can pick and choose parts of the prompt as needed until the quality goes down. Note that if you're going to use an LLM as a judge, you need to define in very strict terms what you're looking for.
+6. **Use very specific binary criteria to figure out what looks good and what doesn't look good**. LLMs do best when they can be weighed against right or wrong criteria. They do more poorly on Likert scales or things that are more open-ended. See if you can define what good looks like when you ask as a series of binary questions, and use that to evaluate how good the responses are.
+7. **Ask an LLM to rewrite your prompt, BUT always edit it yourself**: 
